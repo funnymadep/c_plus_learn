@@ -1,0 +1,3 @@
+/home/hql/git/my_git/c_plus_learn/some_finished/c_plus_del_file_line/build/CMakeFiles/cut_line.dir
+/home/hql/git/my_git/c_plus_learn/some_finished/c_plus_del_file_line/build/CMakeFiles/edit_cache.dir
+/home/hql/git/my_git/c_plus_learn/some_finished/c_plus_del_file_line/build/CMakeFiles/rebuild_cache.dir

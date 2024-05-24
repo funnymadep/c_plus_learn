@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/cut_line.dir/cut_file_line.cpp.o -o cut_line   -L/usr/local/lib 
