@@ -3,6 +3,7 @@
 #include <gst/gst.h>
 #include <gst/rtsp-server/rtsp-server.h>
 #include <opencv2/opencv.hpp>
+#include <X11/Xlib.h>
 
 int main() {
     /********************************************************
@@ -10,12 +11,14 @@ int main() {
      * from localhost UDP port 5004 and stream as RTSP to
      * rtsp://127.0.0.1:8554/test
      ********************************************************/
+    XInitThreads();
+    
     gst_init(NULL, NULL);
     GMainLoop *serverloop = g_main_loop_new(NULL, FALSE);
     GstRTSPServer *server = gst_rtsp_server_new();
     GstRTSPMountPoints *mounts = gst_rtsp_server_get_mount_points(server);
     GstRTSPMediaFactory *factory = gst_rtsp_media_factory_new();
-    gst_rtsp_media_factory_set_launch(factory, "( udpsrc port=5004 ! application/x-rtp,encoding-name=H264 ! rtph264depay ! h264parse ! rtph264pay name=pay0 )");
+    gst_rtsp_media_factory_set_launch(factory, "( udpsrc port=5004 latency=0 ! application/x-rtp,encoding-name=H264 ! rtph264depay ! h264parse ! rtph264pay name=pay0 )");
     gst_rtsp_mount_points_add_factory(mounts, "/test", factory);
     gst_rtsp_server_attach(server, NULL);
     std::thread serverloopthread(g_main_loop_run, serverloop);
@@ -24,8 +27,7 @@ int main() {
     /********************************************************
      * Use GStreamer to capture RTSP stream from IP camera
      ********************************************************/
-    std::string rtsp_pipeline = "rtspsrc location=rtsp://admin:sd123456@192.168.1.89:554/h264/ch1/main/av_stream ! "
-                                "rtpjitterbuffer latency=0 ! "
+    std::string rtsp_pipeline = "rtspsrc location=rtsp://admin:sd123456@192.168.1.89:554/h264/ch1/main/av_stream latency=0 ! "
                                 "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! appsink";
 
     cv::VideoCapture camera(rtsp_pipeline, cv::CAP_GSTREAMER);
@@ -66,6 +68,12 @@ int main() {
         if (frame.empty()) {
             break;
         }
+        // cv::imshow("Frame", frame);
+        cv::imwrite("frame.jpg", frame);
+        // cv::waitKey(1);
+        // 在这里进行图像处理
+        // 例如: cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+
         rtph264_writer.write(frame);
     }
 
