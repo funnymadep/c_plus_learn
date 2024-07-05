@@ -1,0 +1,50 @@
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
+int main(int argc, char** argv)
+{
+    // 初始化ROS节点
+    ros::init(argc, argv, "pcd_publisher");
+    ros::NodeHandle nh;
+
+    // 检查参数
+    if (argc != 2)
+    {
+        ROS_ERROR("Usage: rosrun pcd_publisher pcd_publisher <pcd_file>");
+        return -1;
+    }
+
+    std::string pcd_file = argv[1];
+
+    // 创建发布者，发布到/points话题
+    ros::Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("/points", 1);
+
+    // 加载PCD文件
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud) == -1)
+    {
+        ROS_ERROR("Couldn't read PCD file %s", pcd_file.c_str());
+        return -1;
+    }
+
+    // 转换点云数据
+    sensor_msgs::PointCloud2 output;
+    pcl::toROSMsg(*cloud, output);
+    output.header.frame_id = "map";
+
+    // 循环发布点云数据
+    ros::Rate loop_rate(1);
+    while (ros::ok())
+    {
+        output.header.stamp = ros::Time::now();
+        pub.publish(output);
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
+
+    return 0;
+}
